@@ -480,7 +480,7 @@ namespace gpstk
 
          // time arguments consistency
       double interval0( (lastEpoch - firstEpoch) / (numMaps -1.0) );
-      if (interval != static_cast<int>(interval0))
+      if (interval != 0 && interval != static_cast<int>(interval0))
       {
          FFStreamError e("Inconsistent time arguments.");
          GPSTK_THROW(e);
