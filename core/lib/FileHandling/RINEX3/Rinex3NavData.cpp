@@ -285,7 +285,12 @@ namespace gpstk
          // Epoch info
       satSys = gloe.getSatSys();
       PRNID  = gloe.getPRNID();
-      sat    = RinexSatID(PRNID,SatID::systemGlonass);
+      if (satSys == "R")
+         sat = RinexSatID(PRNID,SatID::systemGlonass);
+      else if (satSys == "S")
+         sat = RinexSatID(PRNID,SatID::systemGeosync);
+      else
+         sat = RinexSatID(PRNID,SatID::systemUnknown);
       time   = gloe.getEpochTime();
 
          // GLONASS parameters

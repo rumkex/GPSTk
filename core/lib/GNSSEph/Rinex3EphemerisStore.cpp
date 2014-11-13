@@ -92,12 +92,9 @@ namespace gpstk
          }
 
          case SatID::systemGlonass:
+         case SatID::systemGeosync:
             Rdata.time = correctTimeSystem(Rdata.time, TimeSystem::GLO);
             return GLOstore.addEphemeris(GloEphemeris(Rdata));
-            break;
-
-         case SatID::systemGeosync:
-            //return GEOstore.addEphemeris(GeoEphemeris(Rdata));
             break;
 
          default:
@@ -278,14 +275,11 @@ namespace gpstk
                ttag = correctTimeSystem(inttag, ts);
                xvt = ORBstore.getXvt(sat,ttag);
                break;
+            case SatID::systemGeosync:
             case SatID::systemGlonass:
                ttag = correctTimeSystem(inttag, TimeSystem::GLO);
                xvt = GLOstore.getXvt(sat,ttag);
                break;
-            //case SatID::systemGeosync:
-            //   ttag = correctTimeSystem(inttag, TimeSystem::GEO);
-            //   xvt = GEOstore.getXvt(sat,ttag);
-            //   break;
             default:
                InvalidRequest e("Unsupported satellite system");
                GPSTK_THROW(e);
@@ -422,9 +416,8 @@ namespace gpstk
             case SatID::systemQZSS:
                retTime = ORBstore.getInitialTime(sat);
             case SatID::systemGlonass:
+            case SatID::systemGeosync:
                retTime = GLOstore.getInitialTime(sat);
-            //case SatID::systemGeosync:
-               //retTime = GEOstore.getInitialTime(sat);
             default:
                break;
          }
@@ -455,9 +448,8 @@ namespace gpstk
             case SatID::systemQZSS:
                retTime = ORBstore.getFinalTime(sat);
             case SatID::systemGlonass:
+            case SatID::systemGeosync:
                retTime = GLOstore.getFinalTime(sat);
-            //case SatID::systemGeosync:
-               //retTime = GEOstore.getFinalTime(sat);
             default:
                break;
          }
