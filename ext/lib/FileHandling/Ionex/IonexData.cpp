@@ -150,7 +150,7 @@ namespace gpstk
          line.clear();
          for (int ilon = 0; ilon < nlon; ilon++)
          {
-            int index = ihgt*dim[2]*dim[1]+ilat*dim[1]+ilon;
+            int index = ihgt*nlat*nlon+ilat*nlon+ilon;
 
             double val = (data[index] != 999.9) ?
                          std::pow(10.0,-exponent)*data[index] : 9999.0;
