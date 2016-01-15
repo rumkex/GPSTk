@@ -122,13 +122,16 @@ namespace gpstk
 
 
          // write TEC/RMS data sequence
-      int nlat(dim[0]), nlon(dim[1]);
+      int nlat(dim[0]), nlon(dim[1]), nhgt(dim[2]);
 
+      for (int ihgt = 0; ihgt < nhgt; ihgt++)
       for (int ilat = 0; ilat < nlat; ilat++)
       {
             // write record initializing a new TEC/RMS 
             // data block for latitude 'currLat'
+            // and height 'currHgt'
          double currLat = lat[0] + ilat*lat[2];
+         double currHgt = hgt[0] + ihgt*hgt[2];
 
          line.clear();
          line += string(2, ' ');
@@ -136,7 +139,7 @@ namespace gpstk
          line += rightJustify( asString(lon[0],1), 6 );
          line += rightJustify( asString(lon[1],1), 6 );
          line += rightJustify( asString(lon[2],1), 6 );
-         line += rightJustify( asString(hgt[0],1), 6 );
+         line += rightJustify( asString(currHgt,1), 6 );
          line += string(28, ' ');
          line += leftJustify(dataBlockString,20);
          strm << line << endl;
@@ -147,7 +150,7 @@ namespace gpstk
          line.clear();
          for (int ilon = 0; ilon < nlon; ilon++)
          {
-            int index = ilat*dim[1]+ilon;
+            int index = ihgt*nlat*nlon+ilat*nlon+ilon;
 
             double val = (data[index] != 999.9) ?
                          std::pow(10.0,-exponent)*data[index] : 9999.0;
