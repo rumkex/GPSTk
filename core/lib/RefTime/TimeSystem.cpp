@@ -276,7 +276,8 @@ namespace gpstk
          dt -= 19.;
       else if(outTS == UTC || // TAI -> UTC
               outTS == BDT || // TAI -> BDT
-              outTS == GLO)   // TAI -> GLO
+              outTS == GLO ||  // TAI -> GLO
+              outTS == QZS)   // TAI -> QZS
          dt -= getLeapSeconds(year, month, day);
       //else if(outTS == BDT)   // TAI -> BDT
       //   dt -= 34.;
