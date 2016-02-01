@@ -4,4 +4,5 @@
 #----------
 # Populate gpstk namespace
 #----------
-from gpstk import *
+from .gpstk import *
+
