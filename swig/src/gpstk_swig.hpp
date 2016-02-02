@@ -170,4 +170,7 @@
 // Geomatics:
 #include "SunEarthSatGeometry.hpp"
 
+// Antex format
+#include "AntexReader.hpp"
+
 #endif
