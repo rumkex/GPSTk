@@ -85,6 +85,27 @@ namespace gpstk
       open(fn, mode);
    }
 
+   FFStream ::
+   FFStream(std::streambuf* streambuffer)
+         : recordNumber(0),
+           filename("internal stream")
+   {
+      rdbuf(streambuffer);
+   }
+
+   bool FFStream ::
+   is_open()
+   {
+      // Imitate legacy behaviour when using internal stream
+      if (baseStream.rdbuf() == this->rdbuf())
+      {
+         return baseStream.is_open();
+      }
+      // If stream is supplied from outside, we don't know its state
+      // (or whether it is open at all)
+      return true;
+   }
+
 
    void FFStream ::
    open( const std::string& fn,
@@ -105,15 +126,32 @@ namespace gpstk
          // classes typically will want to do their initialization
          // AFTER the parent.
       init(fn, mode);
-      std::fstream::open(fn, mode);
+      baseStream.open(fn, mode);
+      rdbuf(baseStream.rdbuf());
+      if (!baseStream)
+      {
+         // Propagate stream state on failure
+         setstate(std::ios::badbit);
+      }
    }  // End of method 'FFStream::open()'
 
+   void FFStream ::
+   close()
+   {
+      if (baseStream.is_open())
+      {
+         baseStream.close();
+      }
+   }
 
    void FFStream ::
    init( const char* fn, std::ios::openmode mode )
    {
-      close();
-      clear();
+      if (baseStream.is_open())
+      {
+         baseStream.close();
+         baseStream.clear();
+      }
       filename = std::string(fn);
       recordNumber = 0;
    }  // End of method 'FFStream::open()'

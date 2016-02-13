@@ -118,8 +118,12 @@ namespace gpstk
        * @warning When using open(), the internal header data of the stream
        * is not guaranteed to be retained.
        */
-   class FFStream : public std::fstream
+   class FFStream : public std::basic_iostream<char>
    {
+   private:
+
+      std::fstream baseStream;
+
    public:
          /// Default constructor, initialize internal data
       FFStream();
@@ -141,17 +145,34 @@ namespace gpstk
           */
       FFStream( const std::string& fn, std::ios::openmode mode=std::ios::in );
 
+         /** Common constructor.
+          *
+          * @param[in] streambuffer override for underlying streambuffer
+          */
+      FFStream(std::streambuf* streambuffer);
+
          /**
-          * Overrides fstream::open so derived classes can make appropriate
-          * internal changes (line count, header info, etc).
+          * Provides replacement for fstream::is_open
+          */
+      bool is_open();
+
+         /**
+          * Provides replacement for fstream::open. Derived classes can 
+          * make appropriate internal changes (line count, header info, etc).
           */
       virtual void open( const char* fn, std::ios::openmode mode );
 
          /**
-          * Overrides fstream:open so derived classes can make appropriate
-          * internal changes (line count, header info, etc).
+          * Provides replacement for fstream:open. Derived classes can 
+          * make appropriate internal changes (line count, header info, etc).
           */
       virtual void open( const std::string& fn, std::ios::openmode mode );
+
+         /**
+          * Provides replacement for fstream::is_open. Closes underlying file
+          * if present.
+          */
+      void close();
 
          /// A function to help debug FFStreams
       void dumpState(std::ostream& s = std::cout) const;
