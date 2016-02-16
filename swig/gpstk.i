@@ -314,6 +314,7 @@ namespace std { class fstream {}; }
 %include "SunEarthSatGeometry.hpp"
 
 // ANTEX format:
+%include "Antenna.hpp"
 %include "AntexReader.hpp"
 
 // Encapsulation of many the __str__, __getitem__, etc. functions to avoid clutter.
