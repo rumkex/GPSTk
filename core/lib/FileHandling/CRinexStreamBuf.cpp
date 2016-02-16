@@ -85,6 +85,8 @@ namespace gpstk {
         }
         else if (in_buffer.compare(60, 13, "END OF HEADER") == 0) {
             header_done = true;
+            crx.clk1.order = 0;
+            crx.clk1.arc_order = 0;
             if (crx.rinex_version == 2) {
                 crx.ep_top_from = '&';
                 crx.ep_top_to = ' ';
@@ -109,6 +111,7 @@ namespace gpstk {
 
     bool CRinexStreamBuf::read_data() {
         while (std::getline(input, in_buffer)) {
+            SKIP:
             if (crx.version == 3 && in_buffer[0] == '&')
             {
                 // Skip escape lines of CRINEX version 3
@@ -120,7 +123,7 @@ namespace gpstk {
                     if (!put_event_data(in_buffer, crx.p_event)) {
                         skip_to_next();
                     }
-                    continue;
+                    goto SKIP;
                 }
                 // Initialize new epoch
                 epoch_buffer.clear();          /**** initialize arc for epoch data ***/
@@ -134,7 +137,7 @@ namespace gpstk {
                 || epoch_buffer[crx.offset + 24] != ' ' || !isdigit(epoch_buffer[crx.offset + 25])) {
                 // Incorrect epoch record
                 skip_to_next();
-                continue;
+                goto SKIP;
             }
 
             int nsat = atoi(crx.p_nsat);
@@ -145,7 +148,7 @@ namespace gpstk {
             set_sat_table(crx.p_satlst, crx.sat_lst_old, nsat, crx.sattbl); /****  set satellite table  ****/
             if (!std::getline(input, in_buffer)) {
                 skip_to_next();
-                continue;
+                goto SKIP;
             }
             data_format oldclk = crx.clk1;
             read_clock(in_buffer, &crx.clk1);
@@ -153,7 +156,7 @@ namespace gpstk {
                 crx.ntype = crx.ntype_record[i];
                 if (!getdiff(i)) {
                     skip_to_next();
-                    continue;
+                    goto SKIP;
                 }
             }
 
@@ -171,8 +174,8 @@ namespace gpstk {
                 } else {
                     out_ptr += sprintf(out_ptr, "%.68s\n", epoch_buffer.c_str());
                 }
-                for (int n = nsat - 12; n > 0; n -= 12) {
-                    out_ptr += sprintf(out_ptr, "%32.s%.36s\n", " ", &epoch_buffer[68 + 3 * n]);
+                for (int i = 1; nsat - 12*i > 0; i++) {
+                    out_ptr += sprintf(out_ptr, "%32.s%.36s\n", " ", &epoch_buffer[32 + 36*i]);
                 }
             } else {
                 if (crx.clk1.order >= 0) {
@@ -196,7 +199,6 @@ namespace gpstk {
                     crx.dy0[i][j] = crx.dy1[i][j];
                 }
             }
-
             return true;
         }
         return false;
@@ -592,23 +594,16 @@ namespace gpstk {
         /****************************************/
         /**** recover the clock offset value ****/
         /****************************************/
-        if (crx.clk1.order < crx.clk1.arc_order) {
-            crx.clk1.order++;
-            for (int i = 0, j = 1; i < crx.clk1.order; i++, j++) {
-                crx.clk1.u[j] = crx.clk1.u[i] + oldclk.u[i];
-                crx.clk1.l[j] = crx.clk1.l[i] + oldclk.l[i];
-                crx.clk1.u[j] += crx.clk1.l[j] / 100000000;
-                crx.clk1.l[j] %= 100000000;
-            }
-        }
-        else
+        if (crx.clk1.order < crx.clk1.arc_order)
         {
-            for (int i = 0, j = 1; i < crx.clk1.order; i++, j++) {
-                crx.clk1.u[j] = crx.clk1.u[i] + oldclk.u[j];
-                crx.clk1.l[j] = crx.clk1.l[i] + oldclk.l[j];
-                crx.clk1.u[j] += crx.clk1.l[j] / 100000000;
-                crx.clk1.l[j] %= 100000000;
-            }
+            crx.clk1.order++;
+        }
+        for (int i = 0, j = 1; i < crx.clk1.order; i++, j++) {
+            int k = crx.clk1.order < crx.clk1.arc_order ? i: j;
+            crx.clk1.u[j] = crx.clk1.u[i] + oldclk.u[k];
+            crx.clk1.l[j] = crx.clk1.l[i] + oldclk.l[k];
+            crx.clk1.u[j] += crx.clk1.l[j] / 100000000;
+            crx.clk1.l[j] %= 100000000;
         }
         /* Signs of py1->u and py1->l can be different at this stage */
         /*   and will be adjustied before outputting */
