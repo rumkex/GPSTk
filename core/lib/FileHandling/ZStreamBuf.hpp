@@ -47,6 +47,10 @@
 #include <streambuf>
 #include <vector>
 
+#ifdef WIN32
+#define ssize_t unsigned long
+#endif
+
 namespace gpstk
 {
 
