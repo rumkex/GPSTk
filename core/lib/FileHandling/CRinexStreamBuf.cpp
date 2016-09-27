@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
+#include <cctype>
 
 #include "CRinexStreamBuf.hpp"
 

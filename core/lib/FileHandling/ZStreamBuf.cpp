@@ -125,17 +125,6 @@ namespace gpstk
 #define NOALIGN 0
 #endif
 
-    union bytes {
-        long word;
-        struct {
-#ifdef WORDS_BIGENDIAN
-            unsigned char b1, b2, b3, b4;
-#else
-            unsigned char b4, b3, b2, b1;
-#endif
-        } bytes;
-    };
-
 #if defined(WORDS_BIGENDIAN) && NOALIGN == 1
     # define input(b,o,c,n,m) \
 	do { \

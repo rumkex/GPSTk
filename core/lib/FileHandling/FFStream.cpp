@@ -45,7 +45,8 @@ namespace gpstk
 {
    FFStream ::
    FFStream()
-         : recordNumber(0)
+         : std::basic_iostream<char>(0), 
+           recordNumber(0)
    {
    }
 
@@ -59,7 +60,8 @@ namespace gpstk
    FFStream ::
    FFStream( const char* fn,
              std::ios::openmode mode )
-         : recordNumber(0),
+         : std::basic_iostream<char>(0),
+           recordNumber(0),
            filename(fn)
    {
          // Note that this will call FFStream::open, not the child
@@ -79,7 +81,8 @@ namespace gpstk
    FFStream ::
    FFStream( const std::string& fn,
              std::ios::openmode mode )
-         : recordNumber(0),
+         : std::basic_iostream<char>(0),
+           recordNumber(0),
            filename(fn)
    {
       open(fn, mode);
@@ -87,7 +90,8 @@ namespace gpstk
 
    FFStream ::
    FFStream(std::streambuf* streambuffer)
-         : recordNumber(0),
+         : std::basic_iostream<char>(0),
+           recordNumber(0),
            filename("internal stream")
    {
       rdbuf(streambuffer);
