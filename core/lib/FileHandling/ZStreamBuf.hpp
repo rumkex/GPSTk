@@ -43,7 +43,6 @@
 #ifndef GPSTK_ZSTREAMBUF_HPP
 #define GPSTK_ZSTREAMBUF_HPP
 
-#include <zlib.h>
 #include <ios>
 #include <streambuf>
 #include <vector>
