@@ -312,8 +312,19 @@ namespace gpstk
           * each system: reallyPut */
       VersionObsMap mapSysR2toR3ObsID;
 
-
-      double version;                  ///< RINEX 3 version/type
+      // RINEX 3 version/type
+#ifdef __GNUC__ // GCC, Clang and etc
+      __attribute__((deprecated("RINEX version field is deprecated. Use versionMajor/versionMinor instead."))) double version
+#elif defined _MSC_VER // MS Visual C
+      __declspec(deprecated("RINEX version field is deprecated. Use versionMajor/versionMinor instead.")) double version;
+#else
+      double version;
+#endif
+        /* Using double for storing version info is misguided at best.
+           version field is left for backwards code compatibility (why is it public anyway?) */
+      int versionMajor;
+      int versionMinor;
+      
       std::string fileType;            ///< RINEX 3 file type
          /// file sys char: RinexSatID system OR Mixed
       std::string fileSys;
@@ -438,10 +449,12 @@ namespace gpstk
       {
          if(!validEoH) return false;
          unsigned long allValid;
-         if(     version < 3.00) allValid = allValid2;
-         else if(version < 3.01) allValid = allValid30;
-         else if(version < 3.02) allValid = allValid301;  
-         else                    allValid = allValid302;
+         if(     versionMajor < 3)  allValid = allValid2;
+         else if(versionMajor == 3 &&
+                 versionMinor == 0) allValid = allValid30;
+         else if(versionMajor == 3 &&
+                 versionMinor == 1) allValid = allValid301;
+         else                         allValid = allValid302;
          return ((valid & allValid) == allValid);
       }
 
