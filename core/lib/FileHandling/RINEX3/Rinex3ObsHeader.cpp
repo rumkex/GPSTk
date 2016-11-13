@@ -101,6 +101,8 @@ namespace gpstk
 
    void Rinex3ObsHeader::clear()
    {
+      versionMajor = 3;
+      versionMinor = 2;
       version = 3.02;
       fileType = "O";          // observation data
       fileSys = "G";           // GPS only by default
@@ -173,10 +175,10 @@ namespace gpstk
       strm.header = *this;
 
       unsigned long allValid;
-      if     (version == 3.00)  allValid = allValid30;
-      else if(version == 3.01)  allValid = allValid301;
-      else if(version == 3.02)  allValid = allValid302;
-      else if(version <  3)     allValid = allValid2;
+      if     (versionMajor == 3 && versionMinor == 0)  allValid = allValid30;
+      else if(versionMajor == 3 && versionMinor == 1)  allValid = allValid301;
+      else if(versionMajor == 3 && versionMinor >= 2)  allValid = allValid302;
+      else if(versionMajor < 3)     allValid = allValid2;
       else
       {
          FFStreamError err("Unknown RINEX version: " + asString(version,2));
@@ -189,11 +191,11 @@ namespace gpstk
          ostringstream msg;
          msg << endl;
          msg << "Version = " << version << hex << endl;
-         if(version == 3.02)
+         if(versionMajor == 3 && versionMinor == 2)
             msg << "allValid302 = 0x" << setw(8) << nouppercase << allValid302 << endl;
-         else if(version == 3.01)
+         else if(versionMajor == 3 && versionMinor == 1)
             msg << "allValid301 = 0x" << setw(8) << nouppercase << allValid301 << endl;
-         else if(version == 3.00)
+         else if(versionMajor == 3 && versionMinor == 0)
             msg << " allValid30 = 0x" << setw(8) << nouppercase << allValid30 << endl;
          else
             msg << "  allValid2 = 0x" << setw(8) << nouppercase << allValid2 << endl;
@@ -206,17 +208,17 @@ namespace gpstk
          msg << "Receiver        " << setw(8) << (valid & validReceiver       ) << endl;
          msg << "Antenna Type    " << setw(8) << (valid & validAntennaType    ) << endl;
          msg << "Antenna DHEN    " << setw(8) << (valid & validAntennaDeltaHEN) << endl;
-         if(version <  3)
+         if(versionMajor < 3)
             msg << "# Obs Type      " << setw(8) << (valid & validNumObs) << endl;
-         if(version >= 3)
+         if(versionMajor == 3)
             msg << "Sys Obs Type    " << setw(8) << (valid & validSystemNumObs  ) << endl;
-         if(version <  3)
+         if(versionMajor < 3)
             msg << "Wave Fact       " << setw(8) << (valid & validWaveFact) << endl;
-         if(version >= 3.01)
+         if(versionMajor == 3 && versionMinor >= 1)
             msg << "Sys Phs Shft    " << setw(8) << (valid & validSystemPhaseShift)<< endl;
-         if(version >= 3.01)
+         if(versionMajor == 3 && versionMinor >= 1)
             msg << "GLO Freq No     " << setw(8) << (valid & validGlonassSlotFreqNo  ) << endl;
-         if(version >= 3.02)
+         if(versionMajor == 3 && versionMinor >= 2)
             msg << "GLO Cod-Phs Bias" << setw(8) << (valid & validGlonassCodPhsBias) << endl;
          msg << "Interval        " << setw(8) << (valid & validInterval       ) << endl;
          msg << "First Time      " << setw(8) << (valid & validFirstTime      ) << endl;
@@ -255,38 +257,38 @@ namespace gpstk
       if(valid & validComment          ) n += commentList.size();
       if(valid & validMarkerName       ) n++;
       if(valid & validMarkerNumber     ) n++;
-      if(version >= 3 && (valid & validMarkerType)) n++;
+      if(versionMajor == 3 && (valid & validMarkerType)) n++;
       if(valid & validObserver         ) n++;
       if(valid & validReceiver         ) n++;
       if(valid & validAntennaType      ) n++;
       if(valid & validAntennaPosition  ) n++;
       if(valid & validAntennaDeltaHEN  ) n++;
-      if(version >= 3 && (valid & validAntennaDeltaXYZ)) n++;
-      if(version >= 3 && (valid & validAntennaPhaseCtr)) n++;
-      if(version >= 3 && (valid & validAntennaBsightXYZ)) n++;
-      if(version >= 3 && (valid & validAntennaZeroDirAzi)) n++;
-      if(version >= 3 && (valid & validAntennaZeroDirXYZ)) n++;
-      if(version >= 3 && (valid & validCenterOfMass)) n++;
-      if(version < 3 && (valid & validNumObs) && R2ObsTypes.size() != 0)
+      if(versionMajor == 3 && (valid & validAntennaDeltaXYZ)) n++;
+      if(versionMajor == 3 && (valid & validAntennaPhaseCtr)) n++;
+      if(versionMajor == 3 && (valid & validAntennaBsightXYZ)) n++;
+      if(versionMajor == 3 && (valid & validAntennaZeroDirAzi)) n++;
+      if(versionMajor == 3 && (valid & validAntennaZeroDirXYZ)) n++;
+      if(versionMajor == 3 && (valid & validCenterOfMass)) n++;
+      if(versionMajor < 3 && (valid & validNumObs) && R2ObsTypes.size() != 0)
          n += 1 + (R2ObsTypes.size()-1)/9;
-      if(version >= 3 && (valid & validSystemNumObs) && numObs != 0)
+      if(versionMajor == 3 && (valid & validSystemNumObs) && numObs != 0)
          n += 1 + (numObs-1)/9;
-      if(version < 3 && (valid & validWaveFact))
+      if(versionMajor < 3 && (valid & validWaveFact))
       {
          n++;
          if(extraWaveFactList.size() != 0) n += extraWaveFactList.size();
       }
-      if(version >= 3 && (valid & validSigStrengthUnit)) n++;
+      if(versionMajor == 3 && (valid & validSigStrengthUnit)) n++;
       if(valid & validInterval         ) n++;
       if(valid & validFirstTime        ) n++;
       if(valid & validLastTime         ) n++;
       if(valid & validReceiverOffset   ) n++;
-      if(version >= 3 && (valid & validSystemDCBSapplied)) n++;
-      if(version >= 3 && (valid & validSystemPCVSapplied)) n++;
-      if(version >= 3 && (valid & validSystemScaleFac)) n++;
-      if(version >= 3.01 && (valid & validSystemPhaseShift)) n++;        // one per system at least
-      if(version >= 3.01 && (valid & validGlonassSlotFreqNo)) n++;  // TODO: continuation lines...
-      if(version >= 3.02 && (valid & validGlonassCodPhsBias)) n++;
+      if(versionMajor == 3 && (valid & validSystemDCBSapplied)) n++;
+      if(versionMajor == 3 && (valid & validSystemPCVSapplied)) n++;
+      if(versionMajor == 3 && (valid & validSystemScaleFac)) n++;
+      if(versionMajor == 3 && versionMinor >= 1 && (valid & validSystemPhaseShift)) n++;        // one per system at least
+      if(versionMajor == 3 && versionMinor >= 1 && (valid & validGlonassSlotFreqNo)) n++;  // TODO: continuation lines...
+      if(versionMajor == 3 && versionMinor >= 2 && (valid & validGlonassCodPhsBias)) n++;
       if(valid & validLeapSeconds      ) n++;
       if(valid & validNumSats          ) n++;
       if(valid & validPrnObs           )
@@ -306,7 +308,10 @@ namespace gpstk
 
       if(valid & validVersion)
       {
-         line  = rightJustify(asString(version,2), 9);
+         line = rightJustify(asString(versionMajor), 6);
+         line += '.';
+         line += rightJustify(asString(versionMajor), 2, '0');
+         line = rightJustify(asString(version, 0), 6);
          line += string(11, ' ');
 
          if((fileType[0] != 'O') && (fileType[0] != 'o'))
@@ -389,7 +394,7 @@ namespace gpstk
          strm << line << endl;
          strm.lineNumber++;
       }
-      if(version >= 3 && (valid & validMarkerType))
+      if(versionMajor == 3 && (valid & validMarkerType))
       {
          line  = leftJustify(markerType, 20);
          line += string(40, ' ');
@@ -443,7 +448,7 @@ namespace gpstk
          strm << line << endl;
          strm.lineNumber++;
       }
-      if(version >= 3 && (valid & validAntennaDeltaXYZ))
+      if(versionMajor == 3 && (valid & validAntennaDeltaXYZ))
       {
          line  = rightJustify(asString(antennaDeltaXYZ[0], 4), 14);
          line += rightJustify(asString(antennaDeltaXYZ[1], 4), 14);
@@ -453,7 +458,7 @@ namespace gpstk
          strm << line << endl;
          strm.lineNumber++;
       }
-      if(version >= 3 && (valid & validAntennaPhaseCtr))
+      if(versionMajor == 3 && (valid & validAntennaPhaseCtr))
       {
          line  =  leftJustify(antennaSatSys , 1);
          line += string(1, ' ');
@@ -466,7 +471,7 @@ namespace gpstk
          strm << line << endl;
          strm.lineNumber++;
       }
-      if(version >= 3 && (valid & validAntennaBsightXYZ))
+      if(versionMajor == 3 && (valid & validAntennaBsightXYZ))
       {
          line  = rightJustify(asString(antennaBsightXYZ[0], 4), 14);
          line += rightJustify(asString(antennaBsightXYZ[1], 4), 14);
@@ -476,7 +481,7 @@ namespace gpstk
          strm << line << endl;
          strm.lineNumber++;
       }
-      if(version >= 3 && (valid & validAntennaZeroDirAzi))
+      if(versionMajor == 3 && (valid & validAntennaZeroDirAzi))
       {
          line  = rightJustify(asString(antennaZeroDirAzi, 4), 14);
          line += string(46, ' ');
@@ -484,7 +489,7 @@ namespace gpstk
          strm << line << endl;
          strm.lineNumber++;
       }
-      if(version >= 3 && (valid & validAntennaZeroDirXYZ))
+      if(versionMajor == 3 && (valid & validAntennaZeroDirXYZ))
       {
          line  = rightJustify(asString(antennaZeroDirXYZ[0], 4), 14);
          line += rightJustify(asString(antennaZeroDirXYZ[1], 4), 14);
@@ -494,7 +499,7 @@ namespace gpstk
          strm << line << endl;
          strm.lineNumber++;
       }
-      if(version >= 3 && (valid & validCenterOfMass))
+      if(versionMajor == 3 && (valid & validCenterOfMass))
       {
          line  = rightJustify(asString(centerOfMass[0], 4), 14);
          line += rightJustify(asString(centerOfMass[1], 4), 14);
@@ -504,7 +509,7 @@ namespace gpstk
          strm << line << endl;
          strm.lineNumber++;
       }
-      if(version < 3 && (valid & validNumObs))          // R2 only
+      if(versionMajor < 3 && (valid & validNumObs))          // R2 only
       {
             // write out RinexObsTypes
          const int maxObsPerLine = 9;
@@ -535,7 +540,7 @@ namespace gpstk
          strm << line << endl;
          strm.lineNumber++;
       }
-      if(version >= 3 && (valid & validSystemNumObs))
+      if(versionMajor == 3 && (valid & validSystemNumObs))
       {
          static const int maxObsPerLine = 13;
 
@@ -577,7 +582,7 @@ namespace gpstk
          }
 
       }
-      if(version < 3 && (valid & validWaveFact))
+      if(versionMajor < 3 && (valid & validWaveFact))
       {
          line  = rightJustify(asString<short>(wavelengthFactor[0]),6);
          line += rightJustify(asString<short>(wavelengthFactor[1]),6);
@@ -632,7 +637,7 @@ namespace gpstk
             }
          }
       }
-      if(version >= 3 && valid & validSigStrengthUnit)
+      if(versionMajor == 3 && valid & validSigStrengthUnit)
       {
          line  = leftJustify(sigStrengthUnit, 20);
          line += string(40, ' ');
@@ -672,7 +677,7 @@ namespace gpstk
          strm << line << endl;
          strm.lineNumber++;
       }
-      if(version >= 3 && (valid & validSystemDCBSapplied))
+      if(versionMajor == 3 && (valid & validSystemDCBSapplied))
       {
          for(size_t i = 0; i < infoDCBS.size(); i++)
          {
@@ -686,7 +691,7 @@ namespace gpstk
             strm.lineNumber++;
          }
       }
-      if(version >= 3 && (valid & validSystemPCVSapplied))
+      if(versionMajor == 3 && (valid & validSystemPCVSapplied))
       {
          for(size_t i = 0; i < infoPCVS.size(); i++)
          {
@@ -700,7 +705,7 @@ namespace gpstk
             strm.lineNumber++;
          }
       }
-      if(version >= 3 && (valid & validSystemScaleFac))
+      if(versionMajor == 3 && (valid & validSystemScaleFac))
       {
          static const int maxObsPerLine = 12;
 
@@ -759,7 +764,7 @@ namespace gpstk
             }
          }
       }
-      if(version >= 3.01 && (valid & validSystemPhaseShift))
+      if(versionMajor == 3 && versionMinor >= 1 && (valid & validSystemPhaseShift))
       {
             //map<string, map<RinexObsID, map<RinexSatID,double> > > sysPhaseShift;
          map<string, map<RinexObsID, map<RinexSatID,double> > >::const_iterator it;
@@ -822,7 +827,7 @@ namespace gpstk
             } // else
          } // for(it=sysPhaseShift.begin(); it!=sysPhaseShift.end(); ++it)
       } // if(version >= 3.01 && (valid & validSystemPhaseShift))
-      if(version >= 3.01 && (valid & validGlonassSlotFreqNo))
+      if(versionMajor == 3 && versionMinor >= 1 && (valid & validGlonassSlotFreqNo))
       {
             //map<RinexSatID,int> glonassFreqNo;
          size_t n(0),nsat(glonassFreqNo.size());
@@ -846,7 +851,7 @@ namespace gpstk
             }
          }
       }
-      if(version >= 3.02 && (valid & validGlonassCodPhsBias))
+      if(versionMajor == 3 && versionMinor >= 2 && (valid & validGlonassCodPhsBias))
       {
          map<RinexObsID,double>::const_iterator it;
          const string labs[4]={"C1C","C1P","C2C","C2P"};
@@ -889,7 +894,7 @@ namespace gpstk
             const vector<int>& numObs(itr->second);               // the vector of ints stored
             vector<int> vec;                                      // the vector of ints to write
 
-            if(version >= 3)
+            if(versionMajor == 3)
                vec = numObs;
             else
             {
@@ -966,7 +971,12 @@ namespace gpstk
          
       if(label == hsVersion)
       {
-         version  = asDouble(line.substr( 0,20));
+         std::string versionString = line.substr(0, 9);
+         // Find version separator, split into two numbers
+         size_t sepPosition = versionString.find('.');
+         versionMajor = asInt(versionString.substr(0, sepPosition));
+         versionMinor = asInt(versionString.substr(sepPosition+1));
+         version = asDouble(versionString);
          fileType = strip(   line.substr(20,20));
          fileSys  = strip(   line.substr(40,20));
 
@@ -1091,7 +1101,7 @@ namespace gpstk
       }
       else if(label == hsNumObs)        // R2 only
       {
-         if(version >= 3)
+         if(versionMajor == 3)
          {
             FFStreamError e("RINEX 2 record in RINEX 3 file: " + label);
             GPSTK_THROW(e);
@@ -1131,7 +1141,7 @@ namespace gpstk
       }
       else if(label == hsSystemNumObs)
       {
-         if(version < 3)
+         if(versionMajor < 3)
          {
             FFStreamError e("RINEX 3 record in RINEX 2 file: " + label);
             GPSTK_THROW(e);
@@ -1449,7 +1459,7 @@ namespace gpstk
          {
             PRN = lastPRN;
             GNSS = PRN.systemChar();
-            if(version < 3)
+            if(versionMajor < 3)
                otmax = R2ObsTypes.size();
             else
             {
@@ -1472,7 +1482,7 @@ namespace gpstk
          {
             PRN = RinexSatID(prn);
             GNSS = PRN.systemChar();
-            if(version < 3)
+            if(versionMajor < 3)
                otmax = R2ObsTypes.size();
             else
             {
@@ -1561,7 +1571,7 @@ namespace gpstk
          // system(s) this may have to be corrected later using
          // wavelengthFactor also define mapSysR2toR3ObsID in case
          // version 2 is written out later
-      if(version < 3)
+      if (versionMajor < 3)
       {
             // try to determine systems included in the file
          vector<string> syss;                // 1-char strings "G" "R" "E" ...
@@ -1642,7 +1652,7 @@ namespace gpstk
          // Since technically the Phase Shift record is required in ver 3.01,
          // create SystemPhaseShift record(s) if not present.
          //map<string, map<RinexObsID, map<RinexSatID,double> > > sysPhaseShift;
-      if(version >= 3.01 && (valid & validSystemNumObs)
+      if (versionMajor == 3 && versionMinor >= 1 && (valid & validSystemNumObs)
          && !(valid & validSystemPhaseShift))
       {
             // loop over obs types to get systems
@@ -1661,10 +1671,22 @@ namespace gpstk
 
          // is the header valid?
       unsigned long allValid;
-      if     (version <  3  )  allValid = allValid2;
-      else if(version == 3.0)  allValid = allValid30;
-      else if(version == 3.01) allValid = allValid301;
-      else if(version == 3.02) allValid = allValid302;
+      if      (versionMajor < 3)
+         allValid = allValid2;
+      else if (versionMajor == 3)
+          switch (versionMinor)
+          {
+          case 0:
+              allValid = allValid30;
+              break;
+          case 1:
+              allValid = allValid301;
+              break;
+          case 2:
+              allValid = allValid302;
+          default:
+              allValid = allValid302;
+          }
       else
       {
          FFStreamError e("Unknown or unsupported RINEX version " + 
@@ -2065,6 +2087,8 @@ namespace gpstk
       size_t i;
 
       version = 2.11;
+      versionMajor = 2;
+      versionMinor = 11;
       valid |= Rinex3ObsHeader::validWaveFact;
          // TD unset R3-specific header members?
 
@@ -2181,9 +2205,20 @@ namespace gpstk
         << printTime(firstObs,"%04Y/%02m/%02d %02H:%02M:%06.3f %P") << endl;
 
       unsigned long allValid = 0;
-      if     (version == 3.0)   allValid = allValid30;
-      else if(version == 3.01)  allValid = allValid301;
-      else if(version == 3.02)  allValid = allValid302;
+      if (versionMajor == 3)
+          switch (versionMinor)
+          {
+          case 0:
+              allValid = allValid30;
+              break;
+          case 1:
+              allValid = allValid301;
+              break;
+          case 2:
+          default:
+              allValid = allValid302;
+              break;
+          }
 
       s << "(This header is ";
       if((valid & allValid) == allValid)
@@ -2208,12 +2243,12 @@ namespace gpstk
          if(!(valid & validAntennaType)) s << " Antenna Type\n";
          if(!(valid & validAntennaPosition)) s << " Antenna Position\n";
          if(!(valid & validAntennaDeltaHEN)) s << " Antenna Delta HEN\n";
-         if(version < 3 && !(valid & validNumObs)) s << " # / TYPES OF OBSERV\n";
-         if(version >= 3 && !(valid & validSystemNumObs  )) s << " Sys / # / Obs Type\n";
+         if(versionMajor < 3 && !(valid & validNumObs)) s << " # / TYPES OF OBSERV\n";
+         if(versionMajor == 3 && !(valid & validSystemNumObs  )) s << " Sys / # / Obs Type\n";
          if(!(valid & validFirstTime)) s << " Time of First Obs\n";
-         if(version >= 3.01 && !(valid & validSystemPhaseShift)) s << " SYS / PHASE SHIFT\n";
-         if(version >= 3.01 && !(valid & validGlonassSlotFreqNo)) s << " GLONASS SLOT / FRQ #\n";
-         if(version >= 3.02 && !(valid & validGlonassCodPhsBias)) s << " GLONASS COD/PHS/BIS\n";
+         if(versionMajor == 3 && versionMinor >= 1 && !(valid & validSystemPhaseShift)) s << " SYS / PHASE SHIFT\n";
+         if(versionMajor == 3 && versionMinor >= 1 && !(valid & validGlonassSlotFreqNo)) s << " GLONASS SLOT / FRQ #\n";
+         if(versionMajor == 3 && versionMinor >= 2 && !(valid & validGlonassCodPhsBias)) s << " GLONASS COD/PHS/BIS\n";
          if(!(validEoH)) s << " END OF HEADER\n";
          s << "END Invalid header records." << endl;
       }
@@ -2253,7 +2288,7 @@ namespace gpstk
       if(valid & validReceiverOffset   )
          s << "Clock offset record is present and offsets "
            << (receiverOffset ? "ARE" : "are NOT") << " applied." << endl;
-      if(version < 3 && (valid & validWaveFact)) // TD extraWaveFactList
+      if(versionMajor < 3 && (valid & validWaveFact)) // TD extraWaveFactList
          s << "Wavelength factor L1: " << wavelengthFactor[0]
            << " L2: " << wavelengthFactor[1] << endl;
       if(valid & validSystemDCBSapplied)
@@ -2389,7 +2424,7 @@ namespace gpstk
 
          // 'old-style' type: Let's change it to 'new style'.
       if( newType.size() == 2 )
-      if (version < 3.0)
+      if (versionMajor < 3)
       {
          // Use mappings instead to find reassigned observation types
          if (mapSysR2toR3ObsID.count("G") == 0 || mapSysR2toR3ObsID.at("G").count(newType) == 0)
@@ -2489,7 +2524,8 @@ namespace gpstk
          // only comparing first character of file type because that's
          // all that matters according to RINEX
       lineMap[hsVersion] =
-         ((version == right.version) &&
+         ((versionMajor == right.versionMajor) &&
+          (versionMinor == right.versionMinor) &&
           (fileType[0] == right.fileType[0]) &&
           (fileSysSat.system == right.fileSysSat.system));
       lineMap[hsRunBy] =
