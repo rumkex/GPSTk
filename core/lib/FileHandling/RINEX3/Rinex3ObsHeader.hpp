@@ -314,7 +314,7 @@ namespace gpstk
 
       // RINEX 3 version/type
 #ifdef __GNUC__ // GCC, Clang and etc
-      __attribute__((deprecated("RINEX version field is deprecated. Use versionMajor/versionMinor instead."))) double version
+      __attribute__((deprecated("RINEX version field is deprecated. Use versionMajor/versionMinor instead."))) double version;
 #elif defined _MSC_VER // MS Visual C
       __declspec(deprecated("RINEX version field is deprecated. Use versionMajor/versionMinor instead.")) double version;
 #else
