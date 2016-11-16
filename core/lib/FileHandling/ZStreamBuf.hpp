@@ -47,10 +47,6 @@
 #include <streambuf>
 #include <vector>
 
-#ifdef WIN32
-#define ssize_t unsigned long
-#endif
-
 namespace gpstk
 {
 
@@ -59,7 +55,7 @@ namespace gpstk
         static const size_t HSIZE = (1<<17);
 
     private:
-        ssize_t lzw_read(char* readbuf, size_t count);
+        long lzw_read(char* readbuf, size_t count);
 
     protected:
         std::streambuf* source;
@@ -73,7 +69,7 @@ namespace gpstk
             char *stackp, *unreadbuf;
             size_t stackp_diff;
             size_t insize, outpos;
-            ssize_t rsize;
+            long rsize;
 
             unsigned char flags;
             int maxbits, block_mode;
