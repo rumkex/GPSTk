@@ -107,7 +107,7 @@ namespace gpstk
     underflow()
     {
         // Refill the buffer
-        ssize_t bytes_read = lzw_read(&outbuffer[0], outbuffer.size());
+        long bytes_read = lzw_read(&outbuffer[0], outbuffer.size());
         if (bytes_read < 0)
         {
             throw new std::runtime_error("Error while decompressing");
@@ -141,7 +141,7 @@ namespace gpstk
 	} while (0)
 #endif
 
-    ssize_t ZStreamBuf::lzw_read(char *readbuf, size_t count)
+    long ZStreamBuf::lzw_read(char *readbuf, size_t count)
     {
         char* de_stack = (char *)&(lzwstate.htab[HSIZE-1]);
 
