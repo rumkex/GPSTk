@@ -2122,7 +2122,7 @@ namespace gpstk
 		        mac = StringUtils::replaceAll(mac, rep.substr(0,1), rep.substr(1));
 
 		        char buffer[1024];
-		        sprintf(buffer, mac.c_str(), to);
+		        snprintf(buffer, sizeof(buffer), mac.c_str(), to);
 
 		        rv.replace(m.position(), m.length(), std::string(buffer));
 	        }
@@ -2156,7 +2156,7 @@ namespace gpstk
             size_t len = r.rm_eo - r.rm_so;
             std::string mac = rv.substr(r.rm_so, len);
             mac = replaceAll(mac, rep.substr(0,1), rep.substr(1));
-            sprintf(buffer, mac.c_str(), to);
+            snprintf(buffer, bufferSize, mac.c_str(), to);
             rv.replace(r.rm_so, len, std::string(buffer));
          }
 
