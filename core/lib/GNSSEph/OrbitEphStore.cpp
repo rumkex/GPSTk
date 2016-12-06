@@ -222,13 +222,14 @@ namespace gpstk
             }
             else {
                // Found matching beginValid but different Toe - This shouldn't happen
-               string str = "Unexpected matching beginValid time but not Toe, for "
-                  + asString(eph->satID)
-                  + ", beginValid= " + printTime(eph->beginValid,fmt)
-                  + ", Toe(map)= " + printTime(it->second->ctToe,fmt)
-                  + ", Toe(candidate)= "+ printTime(eph->ctToe,fmt);
-               InvalidParameter ir(str);
-               GPSTK_THROW(ir);
+               // Choose one with a longer fit interval
+               message = string("duplicate beginValid");
+               if (eph->endValid < it->second->endValid)  {
+                   ret = eph->clone();
+                   toet[eph->beginValid] = ret;
+                   updateTimeLimits(ret);
+               }
+               return ret;
             }
          }
 
