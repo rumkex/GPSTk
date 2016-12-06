@@ -99,6 +99,24 @@ namespace gpstk
    {
 
          // member data
+   private:
+       // barycentric Lagrange interpolation weights for a generic
+       // evenly-spaced set of data points
+       std::vector<double> bWeights;
+
+       // Minimum data interval that's applicable for contained data
+       // (GCD of all time intervals, in milliseconds)
+       std::size_t dataInterval;
+
+       // Updates the estimated interval, should be called BEFORE
+       // an actual data record gets added
+       void updateInterval(const SatID& sat, const CommonTime& newTtag);
+
+       void updateWeights();
+
+       void barycentricInterp(DataTableIterator it1, DataTableIterator it2,
+           double t0, PositionRecord& rec) const;
+
    protected:
 
          // @note havePosition and haveVelocity are in TabularSatStore
@@ -129,6 +147,7 @@ namespace gpstk
          haveVelocity = false;
          haveClockBias = false;
          haveClockDrift = false;
+         updateWeights();
       }
 
          /// Destructor
@@ -250,7 +269,11 @@ namespace gpstk
          /** Set the interpolation order; this routine forces the
           * order to be even. */
       void setInterpolationOrder(unsigned int order) throw()
-      { Nhalf = (order+1)/2; interpOrder = 2*Nhalf; }
+      {
+          Nhalf = (order+1)/2;
+          interpOrder = 2*Nhalf;
+          updateWeights();
+      }
 
          /** Set the flag; if true then bad position values are
           * rejected when adding data to the store. */

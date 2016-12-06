@@ -81,6 +81,80 @@ namespace gpstk
       return os;
    }
 
+   void PositionSatStore::updateInterval(const SatID& sat, const CommonTime& newTtag)
+   {
+       if (tables[sat].size() == 0)
+           ;
+       else
+       {
+           // Estimate interval from closest point
+
+           auto it = tables[sat].lower_bound(newTtag);
+           CommonTime ref;
+           if (it != tables[sat].end())
+               ref = it->first;
+           else
+               ref = tables[sat].rbegin()->first;            
+
+           long day, msod, day1, msod1;
+           double fsod;
+           newTtag.getInternal(day1, msod1, fsod);
+           ref.getInternal(day, msod, fsod);
+           unsigned long long ms = std::abs((day1 - day) * MS_PER_DAY + (msod1 - msod));
+           if (ms > dataInterval)
+           {
+              std::swap(ms, dataInterval);
+           }
+
+           // dataInterval = GCD(ms, dataInterval)
+           while (ms != 0) {
+               unsigned long long r = dataInterval % ms;
+               dataInterval = ms;
+               ms = r;
+           }
+       }
+   }
+
+   void PositionSatStore::updateWeights()
+   {
+       bWeights.clear();
+       bWeights.resize(interpOrder, 1.0);
+       for (std::size_t i = 0; i < interpOrder; i++)
+       {
+           for (std::size_t j = 0; j < interpOrder; j++)
+           {
+               if (i == j) continue;
+               // Since a fixed interval is assumed, 
+               // it's irrelevant (weights can be scaled by any number)
+               bWeights[i] = bWeights[i] * (double(i) - double(j));
+           }
+           bWeights[i] = 1. / bWeights[i];
+       }
+   }
+
+
+   void PositionSatStore::barycentricInterp(DataTableIterator it1, DataTableIterator it2,
+       double t0, PositionRecord& rec) const
+   {
+       for (std::size_t k = 0; k < 3; k++) {
+           double A(0), B(0), C(0), D(0);
+           std::size_t i;
+           auto it = it1;
+           for (it = it1, i = 0; it != it2; it++, i++)
+           {
+               double y = it->second.Pos[k];
+               double t(it->first - it1->first);
+               double w = bWeights[i] / (t0 - t);
+               A += y * w;
+               B += w;
+               C += y * w / (t0 - t);
+               D += w / (t0 - t);
+           }
+           rec.Pos[k] = A / B;
+           rec.Vel[k] = (D * rec.Pos[k] - C) / B;
+       }
+   }
+   
    // Return value for the given satellite at the given time (usually via
    // interpolation of the data table). This interface from TabularSatStore.
    // @param[in] sat the SatID of the satellite of interest
@@ -97,6 +171,7 @@ namespace gpstk
          bool isExact;
          int i;
          PositionRecord rec;
+         rec.sigAcc = rec.Acc = Triple(0, 0, 0);        // default
          DataTableIterator it1, it2, kt;        // cf. TabularSatStore.hpp
 
          isExact = getTableInterval(sat, ttag, Nhalf, it1, it2, haveVelocity);
@@ -105,35 +180,67 @@ namespace gpstk
             return rec;
          }
 
-         // pull data out of the data table
-         size_t n,Nlow(Nhalf-1),Nhi(Nhalf),Nmatch(Nhalf);
-         CommonTime ttag0(it1->first);
-         vector<double> times,P[3],V[3],A[3],sigP[3],sigV[3],sigA[3];
-
-         kt = it1; n=0;
-         while(1) {
-            // find index matching ttag
-            if(isExact && ABS(kt->first - ttag) < 1.e-8)
-               Nmatch = n;
-            times.push_back(kt->first - ttag0);          // sec
-            for(i=0; i<3; i++) {
-               P[i].push_back(kt->second.Pos[i]);
-               V[i].push_back(kt->second.Vel[i]);
-               A[i].push_back(kt->second.Acc[i]);
-               sigP[i].push_back(kt->second.sigPos[i]);
-               sigV[i].push_back(kt->second.sigVel[i]);
-               sigA[i].push_back(kt->second.sigAcc[i]);
-            }
-            if(kt == it2) break;
-            ++kt;
-            ++n;
+         size_t n, Nlow(Nhalf - 1), Nhi(Nhalf), Nmatch(Nhalf);
+         DataTableIterator itmatch;
+         CommonTime ttag0(it1->first);         
+         int nIntervals = int(it2->first - it1->first) / (dataInterval / 1000);
+         double dt(ttag - ttag0), err;           // dt in seconds
+         
+         for (kt = it1, n = 0; kt != it2; kt++, n++) {
+             // find index matching ttag
+             if (isExact && ABS(kt->first - ttag) < 1.e-8)
+             {
+                 itmatch = kt;
+                 Nmatch = n;
+             }
          };
 
-         if(isExact && Nmatch == (int)(Nhalf-1)) { Nlow++; Nhi++; }
+         if (isExact && Nmatch == (int)(Nhalf - 1)) { Nlow++; Nhi++; }
 
+         // Special case: use fast barycentric interpolation without data copying if applicable
+         if (!haveVelocity && dataInterval > 1 && nIntervals == interpOrder - 1)
+         {
+             barycentricInterp(it1, it2, dt, rec);
+             for (i = 0; i < 3; i++) {
+                 rec.Vel[i] *= 10000.;         // km/sec -> dm/sec
+
+                 if (isExact) {
+                     rec.sigPos[i] = itmatch->second.sigPos[i];
+                 }
+                 else {
+                     // TODO: How to fill this without scavenging through the iterator?
+                     // rec.sigPos[i] = RSS(sigP[i][Nhi], sigP[i][Nlow]);
+                     rec.sigPos[i] = 2.0;
+                 }
+                 // TD
+                 rec.sigVel[i] = 0.0;
+             }
+             return rec;
+         }
+
+         // pull data out of the data table
+         vector<double> times(interpOrder);
+
+         vector<double> P[3] = { vector<double>(interpOrder), vector<double>(interpOrder), vector<double>(interpOrder) };
+         vector<double> V[3] = { vector<double>(interpOrder), vector<double>(interpOrder), vector<double>(interpOrder) };
+         vector<double> A[3] = { vector<double>(interpOrder), vector<double>(interpOrder), vector<double>(interpOrder) };
+         vector<double> sigP[3] = { vector<double>(interpOrder), vector<double>(interpOrder), vector<double>(interpOrder) };
+         vector<double> sigV[3] = { vector<double>(interpOrder), vector<double>(interpOrder), vector<double>(interpOrder) };
+         vector<double> sigA[3] = { vector<double>(interpOrder), vector<double>(interpOrder), vector<double>(interpOrder) };
+
+         for (kt = it1, n = 0; kt != it2; kt++, n++) {
+            times[n] = kt->first - ttag0;          // sec
+            for(i=0; i<3; i++) {
+               P[i][n] = kt->second.Pos[i];
+               V[i][n] = kt->second.Vel[i];
+               A[i][n] = kt->second.Acc[i];
+               sigP[i][n] = kt->second.sigPos[i];
+               sigV[i][n] = kt->second.sigVel[i];
+               sigA[i][n] = kt->second.sigAcc[i];
+            }
+         };
+         
          // Lagrange interpolation
-         rec.sigAcc = rec.Acc = Triple(0,0,0);        // default
-         double dt(ttag-ttag0), err;           // dt in seconds
          if(haveVelocity) {
             for(i=0; i<3; i++) {
                // interpolate the positions
@@ -368,6 +475,7 @@ namespace gpstk
             if(haveAcceleration) { oldrec.Acc = rec.Acc; oldrec.sigAcc = rec.sigAcc; }
          }
          else {   // create a new entry in the table
+             updateInterval(sat, ttag);
             tables[sat][ttag] = rec;
          }
       }
@@ -395,6 +503,7 @@ namespace gpstk
             rec.sigPos = Sig;
             rec.Vel = rec.sigVel = rec.Acc = rec.sigAcc = Triple(0,0,0);
 
+            updateInterval(sat, ttag);
             tables[sat][ttag] = rec;
          }
       }
@@ -424,6 +533,7 @@ namespace gpstk
             rec.sigVel = Sig;
             rec.Pos = rec.sigPos = rec.Acc = rec.sigAcc = Triple(0,0,0);
 
+            updateInterval(sat, ttag);
             tables[sat][ttag] = rec;
          }
       }
@@ -453,6 +563,7 @@ namespace gpstk
             rec.sigAcc = Sig;
             rec.Vel = rec.sigVel = rec.Pos = rec.sigPos = Triple(0,0,0);
 
+            updateInterval(sat, ttag);
             tables[sat][ttag] = rec;
          }
       }
