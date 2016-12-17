@@ -2926,40 +2926,7 @@ in matrix and number of types do not match") );
       // Stream input for gnssRinex
    std::istream& operator>>( std::istream& i, gnssRinex& f )
    {
-
-      if( RinexObsStream::isRinexObsStream(i) )    // Rinex2
-      {
-         try
-         {
-            RinexObsStream& strm = dynamic_cast<RinexObsStream&>(i);
-
-            // If the header hasn't been read, read it...
-            if(!strm.headerRead) strm >> strm.header;
-
-            // Clear out this object
-            RinexObsHeader& roh = strm.header;
-
-            RinexObsData rod;
-            strm >> rod;
-
-            // Fill data
-            f.header.source.type = SatIDsystem2SourceIDtype(roh.system);
-            f.header.source.sourceName = roh.markerName;
-            f.header.antennaType = roh.antType;
-            f.header.antennaPosition = roh.antennaPosition;
-            f.header.epochFlag = rod.epochFlag;
-            f.header.epoch = rod.time;
-
-            f.body = satTypeValueMapFromRinexObsData(roh, rod);
-
-            return i;
-         }
-         catch (...)
-         {
-            return i;
-         }
-      }
-      if( Rinex3ObsStream::isRinex3ObsStream(i) )     // Rinex3
+      if( Rinex3ObsStream::isRinex3ObsStream(i) )     // Rinex3+2
       {
          Rinex3ObsStream& strm = dynamic_cast<Rinex3ObsStream&>(i);
 
@@ -2983,6 +2950,39 @@ in matrix and number of types do not match") );
          f.body = satTypeValueMapFromRinex3ObsData(roh, rod);
 
          return i;
+      }
+
+      if (RinexObsStream::isRinexObsStream(i))    // Legacy
+      {
+          try
+          {
+              RinexObsStream& strm = dynamic_cast<RinexObsStream&>(i);
+
+              // If the header hasn't been read, read it...
+              if (!strm.headerRead) strm >> strm.header;
+
+              // Clear out this object
+              RinexObsHeader& roh = strm.header;
+
+              RinexObsData rod;
+              strm >> rod;
+
+              // Fill data
+              f.header.source.type = SatIDsystem2SourceIDtype(roh.system);
+              f.header.source.sourceName = roh.markerName;
+              f.header.antennaType = roh.antType;
+              f.header.antennaPosition = roh.antennaPosition;
+              f.header.epochFlag = rod.epochFlag;
+              f.header.epoch = rod.time;
+
+              f.body = satTypeValueMapFromRinexObsData(roh, rod);
+
+              return i;
+          }
+          catch (...)
+          {
+              return i;
+          }
       }
 
       return i;
