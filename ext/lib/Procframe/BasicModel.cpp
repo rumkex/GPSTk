@@ -190,11 +190,6 @@ namespace gpstk
 
             }
 
-               // Computing Total Group Delay (TGD - meters), if possible
-            double tempTGD(getTGDCorrections( time,
-                                              (*pDefaultEphemeris),
-                                              (*stv).first ) );
-
                // Now we have to add the new values to the data structure
             (*stv).second[TypeID::dtSat] = cerange.svclkbias;
 
@@ -239,15 +234,21 @@ namespace gpstk
                // Apply correction to C1 observable, if appropriate
             if(useTGD)
             {
-                  // Look for C1
-               if( (*stv).second.find(TypeID::C1) != (*stv).second.end() )
-               {
-                  (*stv).second[TypeID::C1] =
-                                       (*stv).second[TypeID::C1] - tempTGD;
-               };
-            };
+                // Computing Total Group Delay (TGD - meters), if possible
+                double tempTGD(getTGDCorrections(time,
+                    (*pDefaultEphemeris),
+                    (*stv).first));
 
-            (*stv).second[TypeID::instC1] = tempTGD;
+                // Look for C1
+                if( (*stv).second.find(TypeID::C1) != (*stv).second.end() )
+                {
+                   (*stv).second[TypeID::C1] =
+                                        (*stv).second[TypeID::C1] - tempTGD;
+                };
+                (*stv).second[TypeID::instC1] = tempTGD;
+            } else {
+                (*stv).second[TypeID::instC1] = 0.0;
+            }
 
          } // End of loop for(stv = gData.begin()...
 
