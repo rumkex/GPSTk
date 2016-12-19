@@ -140,7 +140,7 @@ namespace gpstk
            double A(0), B(0), C(0), D(0);
            std::size_t i;
            auto it = it1;
-           for (it = it1, i = 0; it != it2; it++, i++)
+           for (it = it1, i = 0 ;; it++, i++)
            {
                double y = it->second.Pos[k];
                double t(it->first - it1->first);
@@ -149,6 +149,8 @@ namespace gpstk
                B += w;
                C += y * w / (t0 - t);
                D += w / (t0 - t);
+               if (it == it2)
+                   break;
            }
            rec.Pos[k] = A / B;
            rec.Vel[k] = (D * rec.Pos[k] - C) / B;
@@ -228,7 +230,7 @@ namespace gpstk
          vector<double> sigV[3] = { vector<double>(interpOrder), vector<double>(interpOrder), vector<double>(interpOrder) };
          vector<double> sigA[3] = { vector<double>(interpOrder), vector<double>(interpOrder), vector<double>(interpOrder) };
 
-         for (kt = it1, n = 0; kt != it2; kt++, n++) {
+         for (kt = it1, n = 0 ;; kt++, n++) {
             times[n] = kt->first - ttag0;          // sec
             for(i=0; i<3; i++) {
                P[i][n] = kt->second.Pos[i];
@@ -238,6 +240,8 @@ namespace gpstk
                sigV[i][n] = kt->second.sigVel[i];
                sigA[i][n] = kt->second.sigAcc[i];
             }
+            if (kt == it2)
+                break;
          };
          
          // Lagrange interpolation
