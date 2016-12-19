@@ -115,8 +115,7 @@ namespace gpstk
 
    private:
          /// Initialize internal data structures.
-      void init(bool tryDecode);
-      std::vector<std::streambuf*> filters;
+      void init();
    }; // class 'Rinex3ObsStream'
 
       //@}

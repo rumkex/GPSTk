@@ -40,6 +40,7 @@
  */
 
 #include "FFStream.hpp"
+#include "ZStreamBuf.hpp"
 
 namespace gpstk
 {
@@ -54,6 +55,7 @@ namespace gpstk
    FFStream ::
    ~FFStream()
    {
+       close();
    }
 
 
@@ -100,14 +102,9 @@ namespace gpstk
    bool FFStream ::
    is_open()
    {
-      // Imitate legacy behaviour when using internal stream
-      if (baseStream.rdbuf() == this->rdbuf())
-      {
-         return baseStream.is_open();
-      }
-      // If stream is supplied from outside, we don't know its state
-      // (or whether it is open at all)
-      return true;
+       if (filters.size() > 0)
+           return ((std::filebuf*)filters.front())->is_open();
+       return true;
    }
 
 
@@ -130,31 +127,51 @@ namespace gpstk
          // classes typically will want to do their initialization
          // AFTER the parent.
       init(fn, mode);
-      baseStream.open(fn, mode);
-      rdbuf(baseStream.rdbuf());
-      if (!baseStream)
+      // Should open everything in binary mode, since it really doesn't matter
+      // for text files, but screws up compressed binary files
+      std::filebuf* source = new std::filebuf();
+      if (!source->open(fn, mode | std::ios::binary))
       {
          // Propagate stream state on failure
          setstate(std::ios::badbit);
+         return;
+      };
+      rdbuf(source);
+      filters.push_back(source);
+
+      if (mode & std::ios::in)
+      {
+          // Detour from parent filebuf to provide seamless decompression
+          // Read a few bytes to check the header for LZW signature
+          char magic[2];
+          if (!read(magic, 2))
+              return;
+          // Roll back
+          seekg(-2, std::ios::cur);
+          if (magic[0] == '\037' && magic[1] == '\235')
+          {
+              // Create a streambuffer to decompress LZW on-the-fly
+              std::streambuf* filter = new ZStreamBuf(rdbuf());
+              rdbuf(filter);
+              filters.push_back(filter);
+          }
       }
    }  // End of method 'FFStream::open()'
 
    void FFStream ::
    close()
    {
-      if (baseStream.is_open())
-      {
-         baseStream.close();
-      }
+       for (auto sb : filters)
+           delete sb;
+       filters.clear();
    }
 
    void FFStream ::
    init( const char* fn, std::ios::openmode mode )
    {
-      if (baseStream.is_open())
+      if (filters.size() > 0)
       {
-         baseStream.close();
-         baseStream.clear();
+          close();
       }
       filename = std::string(fn);
       recordNumber = 0;
