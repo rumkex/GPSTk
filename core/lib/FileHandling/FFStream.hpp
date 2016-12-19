@@ -121,8 +121,7 @@ namespace gpstk
    class FFStream : public std::basic_iostream<char>
    {
    private:
-
-      std::fstream baseStream;
+      std::vector<std::streambuf*> filters;
 
    public:
          /// Default constructor, initialize internal data

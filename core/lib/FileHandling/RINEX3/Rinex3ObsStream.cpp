@@ -40,15 +40,13 @@
  */
 
 #include "Rinex3ObsStream.hpp"
-#include "ZStreamBuf.hpp"
-#include "CRinexStreamBuf.hpp"
 
 namespace gpstk
 {
    Rinex3ObsStream ::
    Rinex3ObsStream()
    {
-      init(false);
+      init();
    }
 
 
@@ -57,7 +55,7 @@ namespace gpstk
                     std::ios::openmode mode )
          : FFTextStream(fn, mode)
    {
-      init((mode & std::ios::in) == std::ios::in);
+      init();
    }
 
 
@@ -66,18 +64,13 @@ namespace gpstk
                     std::ios::openmode mode )
          : FFTextStream(fn.c_str(), mode)
    {
-      init((mode & std::ios::in) == std::ios::in);
+      init();
    }
 
 
    Rinex3ObsStream ::
    ~Rinex3ObsStream()
    {
-      // Cleanup allocated streambuffer filters
-      for (std::vector<std::streambuf*>::iterator it = filters.begin(); it != filters.end(); it++)
-      {
-         delete *it;
-      }
    }
 
 
@@ -86,50 +79,15 @@ namespace gpstk
          std::ios::openmode mode )
    {
       FFTextStream::open(fn, mode);
-      init((mode & std::ios::in) == std::ios::in);
    }
 
 
    void Rinex3ObsStream ::
-   init(bool tryDecode)
+   init()
    {
       headerRead = false;
       header = Rinex3ObsHeader();
       timesystem = TimeSystem::GPS;
-
-      // If reading a file, detour from parent baseStream to provide unpacking/decompressing capabilities
-      if (tryDecode)
-      {
-         // Read a few bytes to check the header for LZW signature
-         char magic[2];
-         if (!read(magic, 2))
-            return;
-         // Roll back
-         seekg(-2, std::ios::cur);
-         if (magic[0] == '\037' && magic[1] == '\235')
-         {
-            // Create a streambuffer to decompress LZW on-the-fly
-            std::streambuf* filter = new ZStreamBuf(rdbuf());
-            rdbuf(filter);
-            filters.push_back(filter);
-         }
-
-         char crxHeader[6];
-         // Skip to "CRINEX VERS   / TYPE" comment
-         seekg(60, std::ios::cur);
-         if (!read(crxHeader, 6))
-            return;
-         // Roll back
-         seekg(-66, std::ios::cur);
-         // Check if we have a correct header
-         if (std::string("CRINEX").compare(0, 6, crxHeader) == 0)
-         {
-            // TODO: check if we're reading a Hatanaka-compressed file
-            std::streambuf* filter = new CRinexStreamBuf(rdbuf());
-            rdbuf(filter);
-            filters.push_back(filter);
-         }
-      }
    }
 
 
