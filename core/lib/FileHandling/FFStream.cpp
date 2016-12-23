@@ -161,8 +161,9 @@ namespace gpstk
    void FFStream ::
    close()
    {
-       for (auto sb : filters)
-           delete sb;
+       for (std::vector<std::streambuf*>::iterator sb = filters.begin();
+            sb != filters.end(); sb++)
+           delete *sb;
        filters.clear();
    }
 
