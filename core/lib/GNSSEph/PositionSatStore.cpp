@@ -204,21 +204,14 @@ namespace gpstk
          if (isExact && Nmatch == (int)(Nhalf - 1)) { Nlow++; Nhi++; }
 
          // Special case: use fast barycentric interpolation without data copying if applicable
-         if (!haveVelocity && dataInterval > 1 && nIntervals == interpOrder - 1)
+         if (!isExact && !haveVelocity && dataInterval > 1 && nIntervals == interpOrder - 1)
          {
              barycentricInterp(it1, it2, dt, rec);
              for (i = 0; i < 3; i++) {
                  rec.Vel[i] *= 10000.;         // km/sec -> dm/sec
-
-                 if (isExact) {
-                     rec.sigPos[i] = itmatch->second.sigPos[i];
-                 }
-                 else {
-                     // TODO: How to fill this without scavenging through the iterator?
-                     // rec.sigPos[i] = RSS(sigP[i][Nhi], sigP[i][Nlow]);
-                     rec.sigPos[i] = 2.0;
-                 }
-                 // TD
+                 // TODO: How to fill this without scavenging through the iterator?
+                 // rec.sigPos[i] = RSS(sigP[i][Nhi], sigP[i][Nlow]);
+                 rec.sigPos[i] = 0.0;
                  rec.sigVel[i] = 0.0;
              }
              return rec;
