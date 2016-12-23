@@ -7,7 +7,7 @@
 using namespace gpstk::StringUtils;
 
 namespace gpstk {
-namespace experimental {
+
     CompressedObsStream::CompressedObsStream(const char* fn, std::ios_base::openmode mode) :
         Rinex3ObsStream(fn, mode), epochID(0)
     {
@@ -400,5 +400,4 @@ namespace experimental {
 
         return strm;
     }
-}
 }

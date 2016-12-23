@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 namespace gpstk {
-namespace experimental {
 
     class CompressedObsStream :
         public Rinex3ObsStream
@@ -92,5 +91,4 @@ namespace experimental {
 
     // Helper method for the Processing Framework
     CompressedObsStream& operator >> (CompressedObsStream& strm, gnssRinex& f);
-}
 }
