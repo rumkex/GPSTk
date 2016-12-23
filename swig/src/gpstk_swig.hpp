@@ -119,6 +119,7 @@
 #include "Rinex3ClockData.hpp"
 #include "Rinex3ClockStream.hpp"
 #include "Rinex3EphemerisStore.hpp"
+#include "CompressedObsStream.hpp"
 
 // Ephemeris stores:
 #include "OrbitEphStore.hpp"
