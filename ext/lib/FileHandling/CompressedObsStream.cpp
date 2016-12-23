@@ -244,6 +244,7 @@ namespace experimental {
     }
 
     void CompressedObsData::reallyGetRecord(FFStream & ffs)
+        throw (std::exception, gpstk::FFStreamError, gpstk::StringUtils::StringException)
     {
         CompressedObsStream& strm = dynamic_cast<CompressedObsStream&>(ffs);
 
@@ -305,7 +306,6 @@ namespace experimental {
 
 
     CommonTime CompressedObsStream::parseTime() const
-        throw(FFStreamError)
     {
         try
         {

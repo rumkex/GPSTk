@@ -84,7 +84,8 @@ namespace experimental {
     class CompressedObsData :
         public Rinex3ObsData {
     protected:
-        virtual void reallyGetRecord(FFStream& ffs);
+        virtual void reallyGetRecord(FFStream& ffs)
+        throw (std::exception, gpstk::FFStreamError, gpstk::StringUtils::StringException);
     };
 
     // Helper method for the Processing Framework
