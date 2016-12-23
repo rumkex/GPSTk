@@ -186,13 +186,14 @@ namespace experimental {
         }
 
         // Invalidate all satellites not up-to-date
-        for (auto kv : state)
+        for (State::iterator kv = state.begin(); kv != state.end(); kv++)
         {
-            if (kv.second.lastEpoch != epochID)
+            if (kv->second.lastEpoch != epochID)
             {
-                state[kv.first].present = false;
-                for (auto& obs : state[kv.first].obs)
-                    obs.reset();
+                state[kv->first].present = false;
+                for (std::vector<ObsState>::iterator it = state[kv->first].obs.begin();
+                     it != state[kv->first].obs.end(); it++)
+                    it->reset();
             }
         }
     }
@@ -270,22 +271,20 @@ namespace experimental {
 
             if (epochFlag == 0 || epochFlag == 1 || epochFlag == 6)
             {
-                for (auto kv : strm.state)
+                for (CompressedObsStream::State::iterator kv = strm.state.begin(); kv != strm.state.end(); kv++)
                 {
-                    auto sat = kv.first;
-                    auto data = kv.second.obs;
-                    auto make_datum = [](CompressedObsStream::ObsState s)
+                    for (std::vector<CompressedObsStream::ObsState>::iterator it = kv->second.obs.begin();
+                         it != kv->second.obs.end(); it++)
                     {
                         RinexDatum d;
-                        d.lli = s.lli;
-                        d.lliBlank = s.lli == -1;
-                        d.ssi = s.ssi;
-                        d.ssiBlank = s.ssi == -1;
-                        d.data = s.present()? s.value() / 1000.0: 0.0;
-                        d.dataBlank = !s.present();
-                        return d;
-                    };
-                    std::transform(data.begin(), data.end(), std::back_inserter(obs[sat]), make_datum);
+                        d.lli = it->lli;
+                        d.lliBlank = it->lli == -1;
+                        d.ssi = it->ssi;
+                        d.ssiBlank = it->ssi == -1;
+                        d.data = it->present() ? it->value() / 1000.0 : 0.0;
+                        d.dataBlank = !it->present();
+                        obs[kv->first].push_back(d);
+                    }
                 }
             }
             else

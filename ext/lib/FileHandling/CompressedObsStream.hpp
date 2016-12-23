@@ -16,10 +16,11 @@ namespace experimental {
         class ObsState {
         public:
             static const size_t MAX_ORDER = 10;
-            int8_t order = -1, arcOrder = 0;
-            int8_t lli = -1, ssi = -1;
+            int8_t order, arcOrder;
+            int8_t lli, ssi;
             int64_t dy[MAX_ORDER];
 
+            ObsState() { reset(); }
             void update(const std::string& diff);
             int64_t value() { return dy[0]; }
             bool present() { return order >= 0; }
@@ -34,8 +35,8 @@ namespace experimental {
 
         struct SatState {
             std::vector<ObsState> obs;
-            uint32_t lastEpoch = 0;
-            bool present = false;
+            uint32_t lastEpoch;
+            bool present;
         };
 
         typedef std::map<RinexSatID, SatState> State;
@@ -44,7 +45,7 @@ namespace experimental {
         int version;
 
         // Epoch counter (helps to find missing observations)
-        int epochID = 0;
+        int epochID;
 
         // Current epoch
         std::string epoch;
