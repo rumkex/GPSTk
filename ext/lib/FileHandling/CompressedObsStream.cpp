@@ -383,7 +383,7 @@ namespace experimental {
         if (!strm.headerRead) strm >> strm.header;
 
         // Clear out this object
-        Rinex3ObsHeader& roh = strm.header;
+        CompressedObsHeader& roh = strm.header;
 
         CompressedObsData rod;
         strm >> rod;

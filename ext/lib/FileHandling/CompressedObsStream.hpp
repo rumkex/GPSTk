@@ -80,6 +80,8 @@ namespace experimental {
         friend class CompressedObsData;
     };
 
+    typedef Rinex3ObsHeader CompressedObsHeader;
+
     // Wraps CompressedObsStream's state in Rinex3ObsData interface
     class CompressedObsData :
         public Rinex3ObsData {
