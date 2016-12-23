@@ -64,6 +64,8 @@ namespace experimental {
         // Compact RINEX 1.0 / 3.0 differences in form of flags
         Config cfg;
 
+        void readPreamble();
+
         void readData();
 
         void setFlags(SatState obslist, const std::string& diff);
@@ -71,8 +73,8 @@ namespace experimental {
         CommonTime parseTime() const;
 
     public:
-
-        CompressedObsStream(const std::string& fn, std::ios_base::openmode mode);
+        CompressedObsStream(const char* fn, std::ios_base::openmode mode = std::ios::in);
+        CompressedObsStream(const std::string& fn, std::ios_base::openmode mode = std::ios::in);
 
         friend class CompressedObsData;
     };

@@ -8,9 +8,19 @@ using namespace gpstk::StringUtils;
 
 namespace gpstk {
 namespace experimental {
+    CompressedObsStream::CompressedObsStream(const char* fn, std::ios_base::openmode mode) :
+        Rinex3ObsStream(fn, mode), epochID(0)
+    {
+        readPreamble();
+    }
 
     CompressedObsStream::CompressedObsStream(const std::string& fn, std::ios_base::openmode mode):
-        Rinex3ObsStream(fn, mode)
+        Rinex3ObsStream(fn, mode), epochID(0)
+    {
+        readPreamble();
+    }
+
+    void CompressedObsStream::readPreamble()
     {
         std::string line;
         // Read main compressed RINEX header
