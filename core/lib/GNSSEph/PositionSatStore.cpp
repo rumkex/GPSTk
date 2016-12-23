@@ -42,6 +42,7 @@
 #include "PositionSatStore.hpp"
 #include "MiscMath.hpp"
 #include <vector>
+#include <cassert>
 
 using namespace std;
 
@@ -101,6 +102,8 @@ namespace gpstk
            newTtag.getInternal(day1, msod1, fsod);
            ref.getInternal(day, msod, fsod);
            unsigned long long ms = std::abs((day1 - day) * MS_PER_DAY + (msod1 - msod));
+           // Ideally, should never be zero (function is only called when a new record is added)
+           assert(ms > 0);
            if (ms > dataInterval)
            {
               std::swap(ms, dataInterval);
@@ -112,6 +115,7 @@ namespace gpstk
                dataInterval = ms;
                ms = r;
            }
+           assert(dataInterval > 0);
        }
    }
 
@@ -185,7 +189,7 @@ namespace gpstk
          size_t n, Nlow(Nhalf - 1), Nhi(Nhalf), Nmatch(Nhalf);
          DataTableIterator itmatch;
          CommonTime ttag0(it1->first);         
-         int nIntervals = int(it2->first - it1->first) / (dataInterval / 1000);
+         long long nIntervals = dataInterval == 0? 0: ((long long)(it2->first - it1->first) * 1000LL) / dataInterval;
          double dt(ttag - ttag0), err;           // dt in seconds
          
          for (kt = it1, n = 0; kt != it2; kt++, n++) {
