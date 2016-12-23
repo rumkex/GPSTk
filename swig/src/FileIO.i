@@ -140,6 +140,7 @@ STREAM_HELPER(RinexObs)
 STREAM_HELPER(SEM)
 STREAM_HELPER(SP3)
 STREAM_HELPER(Yuma)
+STREAM_HELPER(CompressedObs)
 
 
 /* class FORMATNAME ## Dataset(list): */

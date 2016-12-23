@@ -263,6 +263,9 @@ namespace std { class fstream {}; }
 %include "Rinex3ClockStream.hpp"
 %include "Rinex3EphemerisStore.hpp"
 
+// Compact RINEX obs:
+%include "CompressedObsStream.hpp"
+
 // Ephemeris stores:
 %include "OrbitEphStore.hpp"
 %include "BDSEphemerisStore.hpp"

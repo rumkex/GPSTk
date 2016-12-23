@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 namespace gpstk {
-namespace experimental {
 
     class CompressedObsStream :
         public Rinex3ObsStream
@@ -16,10 +15,11 @@ namespace experimental {
         class ObsState {
         public:
             static const size_t MAX_ORDER = 10;
-            int8_t order = -1, arcOrder = 0;
-            int8_t lli = -1, ssi = -1;
+            int8_t order, arcOrder;
+            int8_t lli, ssi;
             int64_t dy[MAX_ORDER];
 
+            ObsState() { reset(); }
             void update(const std::string& diff);
             int64_t value() { return dy[0]; }
             bool present() { return order >= 0; }
@@ -34,8 +34,8 @@ namespace experimental {
 
         struct SatState {
             std::vector<ObsState> obs;
-            uint32_t lastEpoch = 0;
-            bool present = false;
+            uint32_t lastEpoch;
+            bool present;
         };
 
         typedef std::map<RinexSatID, SatState> State;
@@ -44,7 +44,7 @@ namespace experimental {
         int version;
 
         // Epoch counter (helps to find missing observations)
-        int epochID = 0;
+        int epochID;
 
         // Current epoch
         std::string epoch;
@@ -64,6 +64,8 @@ namespace experimental {
         // Compact RINEX 1.0 / 3.0 differences in form of flags
         Config cfg;
 
+        void readPreamble();
+
         void readData();
 
         void setFlags(SatState obslist, const std::string& diff);
@@ -71,20 +73,22 @@ namespace experimental {
         CommonTime parseTime() const;
 
     public:
-
-        CompressedObsStream(const std::string& fn, std::ios_base::openmode mode);
+        CompressedObsStream(const char* fn, std::ios_base::openmode mode = std::ios::in);
+        CompressedObsStream(const std::string& fn, std::ios_base::openmode mode = std::ios::in);
 
         friend class CompressedObsData;
     };
+
+    typedef Rinex3ObsHeader CompressedObsHeader;
 
     // Wraps CompressedObsStream's state in Rinex3ObsData interface
     class CompressedObsData :
         public Rinex3ObsData {
     protected:
-        virtual void reallyGetRecord(FFStream& ffs);
+        virtual void reallyGetRecord(FFStream& ffs)
+        throw (std::exception, gpstk::FFStreamError, gpstk::StringUtils::StringException);
     };
 
     // Helper method for the Processing Framework
     CompressedObsStream& operator >> (CompressedObsStream& strm, gnssRinex& f);
-}
 }
