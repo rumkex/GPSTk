@@ -90,7 +90,7 @@ namespace gpstk
        {
            // Estimate interval from closest point
 
-           auto it = tables[sat].lower_bound(newTtag);
+           DataTableIterator it = tables[sat].lower_bound(newTtag);
            CommonTime ref;
            if (it != tables[sat].end())
                ref = it->first;
@@ -143,7 +143,7 @@ namespace gpstk
        for (std::size_t k = 0; k < 3; k++) {
            double A(0), B(0), C(0), D(0);
            std::size_t i;
-           auto it = it1;
+           DataTableIterator it = it1;
            for (it = it1, i = 0 ;; it++, i++)
            {
                double y = it->second.Pos[k];
