@@ -42,6 +42,7 @@
 #include "PositionSatStore.hpp"
 #include "MiscMath.hpp"
 #include <vector>
+#include <cassert>
 
 using namespace std;
 
@@ -89,7 +90,7 @@ namespace gpstk
        {
            // Estimate interval from closest point
 
-           auto it = tables[sat].lower_bound(newTtag);
+           DataTableIterator it = tables[sat].lower_bound(newTtag);
            CommonTime ref;
            if (it != tables[sat].end())
                ref = it->first;
@@ -101,6 +102,8 @@ namespace gpstk
            newTtag.getInternal(day1, msod1, fsod);
            ref.getInternal(day, msod, fsod);
            unsigned long long ms = std::abs((day1 - day) * MS_PER_DAY + (msod1 - msod));
+           // Ideally, should never be zero (function is only called when a new record is added)
+           assert(ms > 0);
            if (ms > dataInterval)
            {
               std::swap(ms, dataInterval);
@@ -112,6 +115,7 @@ namespace gpstk
                dataInterval = ms;
                ms = r;
            }
+           assert(dataInterval > 0);
        }
    }
 
@@ -139,7 +143,7 @@ namespace gpstk
        for (std::size_t k = 0; k < 3; k++) {
            double A(0), B(0), C(0), D(0);
            std::size_t i;
-           auto it = it1;
+           DataTableIterator it = it1;
            for (it = it1, i = 0 ;; it++, i++)
            {
                double y = it->second.Pos[k];
@@ -185,7 +189,7 @@ namespace gpstk
          size_t n, Nlow(Nhalf - 1), Nhi(Nhalf), Nmatch(Nhalf);
          DataTableIterator itmatch;
          CommonTime ttag0(it1->first);         
-         int nIntervals = int(it2->first - it1->first) / (dataInterval / 1000);
+         long long nIntervals = dataInterval == 0? 0: ((long long)(it2->first - it1->first) * 1000LL) / dataInterval;
          double dt(ttag - ttag0), err;           // dt in seconds
          
          for (kt = it1, n = 0; kt != it2; kt++, n++) {
@@ -200,21 +204,14 @@ namespace gpstk
          if (isExact && Nmatch == (int)(Nhalf - 1)) { Nlow++; Nhi++; }
 
          // Special case: use fast barycentric interpolation without data copying if applicable
-         if (!haveVelocity && dataInterval > 1 && nIntervals == interpOrder - 1)
+         if (!isExact && !haveVelocity && dataInterval > 1 && nIntervals == interpOrder - 1)
          {
              barycentricInterp(it1, it2, dt, rec);
              for (i = 0; i < 3; i++) {
                  rec.Vel[i] *= 10000.;         // km/sec -> dm/sec
-
-                 if (isExact) {
-                     rec.sigPos[i] = itmatch->second.sigPos[i];
-                 }
-                 else {
-                     // TODO: How to fill this without scavenging through the iterator?
-                     // rec.sigPos[i] = RSS(sigP[i][Nhi], sigP[i][Nlow]);
-                     rec.sigPos[i] = 2.0;
-                 }
-                 // TD
+                 // TODO: How to fill this without scavenging through the iterator?
+                 // rec.sigPos[i] = RSS(sigP[i][Nhi], sigP[i][Nlow]);
+                 rec.sigPos[i] = 0.0;
                  rec.sigVel[i] = 0.0;
              }
              return rec;

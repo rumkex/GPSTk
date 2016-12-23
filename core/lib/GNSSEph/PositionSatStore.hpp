@@ -106,7 +106,7 @@ namespace gpstk
 
        // Minimum data interval that's applicable for contained data
        // (GCD of all time intervals, in milliseconds)
-       std::size_t dataInterval;
+       unsigned long long dataInterval;
 
        // Updates the estimated interval, should be called BEFORE
        // an actual data record gets added
