@@ -187,6 +187,7 @@ namespace gpstk
          }
    
          string thisLabel(line, 60, 20);
+         thisLabel = strip(thisLabel);
 
             // following is huge if else else ... endif for each record type
          if(thisLabel == stringVersion) 

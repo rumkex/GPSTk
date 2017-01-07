@@ -205,6 +205,7 @@ namespace gpstk
          }
          
          string thisLabel(line, 60, 20);
+         thisLabel = strip (thisLabel);
          
          if (thisLabel == versionString)
          {

@@ -519,6 +519,7 @@ namespace gpstk
       throw(FFStreamError)
    {
       string label(line, 60, 20);
+      label = strip(label);
 
       if (label == versionString)
       {
