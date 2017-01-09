@@ -968,6 +968,7 @@ namespace gpstk
    {
       int i;
       string label(line, 60, 20);
+      label = strip(label);
          
       if(label == hsVersion)
       {
